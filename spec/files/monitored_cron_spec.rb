@@ -13,7 +13,7 @@ describe 'MonitoredCronRunner' do
     let (:expect_runtime)   { '0.532' }
 
     before (:each) do
-      allow(Syslog::Logger).to receive(:new) do |program_name|
+      allow(Syslog).to receive(:open) do |program_name|
         syslog.on_new(program_name)
         syslog
       end
@@ -295,47 +295,33 @@ end
 
 module MonitoredCronSpec
   class FakeSyslog
+    attr_reader :logged_messages
+
     def initialize
       @logged_messages = []
     end
 
+    def log(level, format_string, *format_args)
+      level_names = {
+        Syslog::LOG_DEBUG => 'debug',
+        Syslog::LOG_INFO => 'info',
+        Syslog::LOG_NOTICE => 'notice',
+        Syslog::LOG_WARNING => 'warn',
+        Syslog::LOG_ERR => 'err',
+        Syslog::LOG_ALERT  => 'alert',
+        Syslog::LOG_EMERG  => 'emerg'
+      }
+
+      @logged_messages << format(
+        '%s: [%s] %s',
+        @program_name,
+        level_names[level],
+        format(format_string, *format_args)
+      )
+    end
+
     def on_new(program_name)
       @program_name = program_name
-    end
-
-    def debug(msg)
-      do_log('debug', msg)
-    end
-
-    def info(msg)
-      do_log('info', msg)
-    end
-
-    def warn(msg)
-      do_log('notice', msg)
-    end
-
-    def error(msg)
-      # This is actually syslog warning
-      do_log('warn', msg)
-    end
-
-    def fatal(msg)
-      # This is syslog err level
-      do_log('err', msg)
-    end
-
-    def unknown(msg)
-      # This is syslog alert
-      do_log('alert', msg)
-    end
-
-    attr_reader :logged_messages
-
-    private
-
-    def do_log(level, msg)
-      @logged_messages << "#{@program_name}: [#{level}] #{msg}"
     end
   end
 end

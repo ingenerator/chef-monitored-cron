@@ -17,12 +17,6 @@ class MonitoredCronRunner
     end
   end
 
-  class CommandFailedError < RuntimeError
-  end
-
-  class CommandErrorOutputError < RuntimeError
-  end
-
   def self.run(job_file)
     new(job_file).instance_eval { run }
   end
@@ -46,9 +40,9 @@ class MonitoredCronRunner
     @end_time       = Time.now
     report_status(result)
   rescue InvalidConfigurationError => err
-    syslog.unknown(err.message)
+    log(Syslog::LOG_ALERT, err.message)
   rescue SystemCallError => err
-    syslog.unknown('Failed to start: ' + err.message)
+    log(Syslog::LOG_ALERT, 'Failed to start: %s', err.message)
   end
 
   def load_config
@@ -133,12 +127,12 @@ class MonitoredCronRunner
     output = read_pipe_lines(stdout, stderr, timeout)
 
     output[:stdout].each do |line|
-      syslog.debug(line)
+      log(Syslog::LOG_DEBUG, line)
     end
 
     output[:stderr].each do |line|
       @had_stderr = true
-      syslog.error(line)
+      log(Syslog::LOG_WARNING, line)
     end
   end
 
@@ -168,18 +162,18 @@ class MonitoredCronRunner
     buffer.split("\n")
   end
 
-  def syslog
-    # FACILITY
-    @syslog ||= Syslog::Logger.new(@syslog_program)
+  def log(level, format_string, *format_args)
+    @syslog ||= Syslog.open(@syslog_program)
+    @syslog.log(level, format_string, *format_args)
   end
 
   def report_status(exit_status)
     if !exit_status.success?
-      syslog.fatal("Failed with exit code #{exit_status.exitstatus} after " + task_runtime_seconds + 's')
+      log(Syslog::LOG_ERR, 'Failed with exit code %d after %ss', exit_status.exitstatus, task_runtime_seconds)
     elsif @had_stderr
-      syslog.fatal('Displayed errors but exited 0 after ' + task_runtime_seconds + 's')
+      log(Syslog::LOG_ERR, 'Displayed errors but exited 0 after %ss', task_runtime_seconds)
     else
-      syslog.info('Ran successfully in ' + task_runtime_seconds + 's')
+      log(Syslog::LOG_INFO, 'Ran successfully in %ss', task_runtime_seconds)
       ping_success_webhook
     end
   end
@@ -194,7 +188,7 @@ class MonitoredCronRunner
 
     url = @config['notify']['url'].sub(':runtime:', task_runtime_seconds)
     Net::HTTP.get(URI(url))
-    syslog.info('Pinged '+url)
+    log(Syslog::LOG_INFO, 'Pinged %s', url)
   end
 end
 
@@ -202,7 +196,13 @@ if $PROGRAM_NAME == __FILE__
   begin
     MonitoredCronRunner.run(ARGV[0])
   rescue Exception => err
-    syslog = Syslog::Logger.new('monitored-cron')
-    syslog.unknown("Unexpected exception [#{err.class.name}] #{err.message} in {#{err.backtrace.first}}")
+    syslog = Syslog.open('monitored-cron')
+    syslog.log(
+      Syslog::LOG_EMERG,
+      'Unexpected exception [%s] %s in %s',
+      err.class.name,
+      err.message,
+      err.backtrace.first
+    )
   end
 end
