@@ -289,7 +289,7 @@ describe 'MonitoredCronRunner' do
       expected << 'cron-' + config_task_name + ': ' + msg
     end
 
-    expect(syslog.logged_messages.join("\n")).to eq(expected.join("\n"))
+    expect(syslog.logged_messages).to match_array(expected)
   end
 end
 
