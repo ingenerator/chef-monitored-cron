@@ -2,7 +2,7 @@ require 'spec_helper'
 require_relative '../../files/default/monitored_cron.rb'
 
 describe 'MonitoredCronRunner' do
-  describe '#run', focus: true do
+  describe '#run' do
     let(:config_file) { '/etc/monitored_cron/our-job.json' }
     let (:config_task_name) { 'our-job' }
     let (:config_content)   { null }
@@ -279,6 +279,43 @@ describe 'MonitoredCronRunner' do
             end
           end
         end
+      end
+    end
+
+    context 'when the program is run directly' do
+      let (:config_file) { Tempfile.new(['test-job', '.json']) }
+
+      before (:each) do
+        config_file.write(JSON.pretty_generate(command: 'echo "Standard stuff"',
+                                               notify: { url: 'http://www.ingenerator.com/' }))
+        config_file.close
+      end
+
+      after(:each) do
+        config_file.unlink
+      end
+
+      it 'should run the task and produce the expected output' do
+        # This spec is a rough integration test to check the script actually
+        # runs. For example, it requires things that are already loaded by rspec
+        # so we need to know that it works OK.
+        # Because it's hard to capture syslog, we set an environment variable
+        # that causes it to print messages to the screen instead
+        ruby = `which ruby`.chomp
+        script = File.expand_path('../../files/default/monitored_cron.rb', File.dirname(__FILE__))
+        cron_name = 'cron-' + File.basename(config_file.path, '.json')
+
+        expect_output_pattern = Regexp.new([
+          '^',
+          Regexp.quote("#{cron_name}: [7] Standard stuff\n"),
+          Regexp.quote("#{cron_name}: [6] Ran successfully in 0.") + "[0-9]{3}s\n",
+          Regexp.quote("#{cron_name}: [6] Pinged http://www.ingenerator.com/"),
+          '$'
+        ].join)
+
+        cmd = "MONITORED_CRON_TEST=1 #{ruby} #{script} #{config_file.path} 2>&1"
+        expect(`#{cmd}`).to match expect_output_pattern
+        expect($?).to eq(0)
       end
     end
   end

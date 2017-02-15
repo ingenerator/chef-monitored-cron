@@ -216,6 +216,17 @@ class MonitoredCronRunner
   def log(level, format_string, *format_args)
     @syslog ||= Syslog.open(@syslog_program, Syslog::LOG_CONS, Syslog::LOG_CRON)
     @syslog.log(level, format_string, *format_args)
+
+    # Rather crude test hook to clone syslog output to the console for integration
+    # testing
+    if ENV['MONITORED_CRON_TEST']
+      puts format(
+        '%s: [%s] %s',
+        @syslog_program,
+        level,
+        format(format_string, *format_args)
+      )
+    end
   end
 
   # Handle the task exit status and report overall state
