@@ -52,7 +52,7 @@ action :create do
     mode    0o600
   end
 
-  cron 'monitored-some-task' do
+  cron cron_name do
     command cron_command
     user    new_resource.user
     if new_resource.schedule['time']
@@ -68,6 +68,11 @@ action :create do
 end
 
 action_class do
+
+  def cron_name
+    'monitored-' + new_resource.name
+  end
+
   # Path to the JSON job file for this job
   def job_file_path
     ::File.join(node['monitored_cron']['job_dir'], name + '.json')
