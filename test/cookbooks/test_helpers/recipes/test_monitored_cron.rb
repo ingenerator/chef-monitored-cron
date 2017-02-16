@@ -1,6 +1,18 @@
+# Have to do this nasty workaround because the attributes from chefspec are
+# always string keys, but it's possible for them to be symbols if used direct
+# in a recipe
+if node['test']['schedule_symbols']
+  schedule = {}
+  node['test']['schedule_symbols'].each do | k, v |
+    schedule[k.to_sym] = v
+  end
+else
+  schedule = node['test']['schedule']
+end
+
 monitored_cron node['test']['name'] do
   command      node['test']['command']
-  schedule     node['test']['schedule']
+  schedule     schedule
   user         node['test']['user'] if node['test']['user']
   notify_url   node['test']['notify_url'] if node['test']['notify_url']
   require_lock node['test']['require_lock'] if node['test']['require_lock']

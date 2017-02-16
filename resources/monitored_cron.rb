@@ -18,7 +18,7 @@ property :schedule, Hash, required: true, callbacks: {
     val.length >= 1
   end,
   'schedule cannot combine time: with any other value' => lambda do |val|
-    (val.length == 1) || (!val.key? :time)
+    (val.length == 1) || ! (val.key?(:time) || val.key?('time'))
   end
 }
 
@@ -52,17 +52,19 @@ action :create do
     mode    0o600
   end
 
+  schedule_symbols = schedule_as_symbols
+
   cron cron_name do
     command cron_command
     user    new_resource.user
-    if new_resource.schedule['time']
-      time new_resource.schedule['time']
+    if schedule_symbols[:time]
+      time schedule_symbols[:time]
     else
-      minute new_resource.schedule['minute'] if new_resource.schedule['minute']
-      hour new_resource.schedule['hour'] if new_resource.schedule['hour']
-      day new_resource.schedule['day'] if new_resource.schedule['day']
-      month new_resource.schedule['month'] if new_resource.schedule['month']
-      weekday new_resource.schedule['weekday'] if new_resource.schedule['weekday']
+      minute schedule_symbols[:minute] if schedule_symbols[:minute]
+      hour schedule_symbols[:hour] if schedule_symbols[:hour]
+      day schedule_symbols[:day] if schedule_symbols[:day]
+      month schedule_symbols[:month] if schedule_symbols[:month]
+      weekday schedule_symbols[:weekday] if schedule_symbols[:weekday]
     end
   end
 end
@@ -89,6 +91,12 @@ action_class do
   # Builds the notify section of config json
   def notify_config
     { url: new_resource.notify_url }
+  end
+
+  # Depending on the user's resource syntax / whether the schedule has come from
+  # attributes, it may be keyed with either symbols or strings. fix that.
+  def schedule_as_symbols
+    new_resource.schedule.inject({}){ |memo,(k,v)| memo[k.to_sym] = v; memo }
   end
 
   # Builds the locking section of config json

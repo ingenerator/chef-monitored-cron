@@ -105,6 +105,16 @@ describe_resource 'resources::monitored_cron' do
         )
       end
 
+      it 'specifies the correct cron schedule even if the user specifies time as symbols' do
+        chef_runner.node.normal['test']['schedule_symbols'] = {:minute => 5}
+        expect(chef_run).to create_cron('monitored-some-task').with(
+          command: '/usr/bin/ruby /src/monitored_cron/monitored_cron.rb /etc/jobs/some-task.json',
+          time:    nil,
+          hour:    '*',
+          minute:  '5'
+        )
+      end
+
       context 'when job is configured with locking' do
         let (:node_attributes) do
           {
