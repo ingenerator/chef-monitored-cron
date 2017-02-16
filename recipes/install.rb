@@ -14,7 +14,7 @@ end
 directory node['monitored_cron']['lock_dir'] do
   owner 'root'
   group 'root'
-  mode 0o722
+  mode 0o733
   recursive true
 end
 

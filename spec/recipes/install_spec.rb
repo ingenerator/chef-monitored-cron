@@ -23,7 +23,7 @@ describe 'monitored-cron::install' do
     expect(chef_run).to create_directory('/locks').with(
       owner: 'root',
       group: 'root',
-      mode: 0o722,
+      mode: 0o733,
       recursive: true
     )
   end
