@@ -17,26 +17,18 @@
 # limitations under the License.
 #
 
-directory node['monitored_cron']['src_dir'] do
-  action    :create
-  owner     "root"
-  group     "root"
-  mode      0755
-  recursive true
-end
-
 cookbook_file "#{node['monitored_cron']['src_dir']}/lockrun.c" do
   action    :create
-  owner     "root"
-  group     "root"
-  mode      0644
+  owner     'root'
+  group     'root'
+  mode      0o644
 end
 
-execute "gcc lockrun.c -o lockrun" do
+execute 'gcc lockrun.c -o lockrun' do
   action    :run
   cwd       node['monitored_cron']['src_dir']
-  user      "root"
-  not_if    "which lockrun"
+  user      'root'
+  not_if    'which lockrun'
 end
 
 link "#{node['monitored_cron']['bin_dir']}/lockrun" do
