@@ -1,4 +1,4 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 gem 'berkshelf',  '~> 5.0'
 gem 'chefspec',   '~> 5.0'
