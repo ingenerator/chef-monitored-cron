@@ -18,9 +18,6 @@ property :schedule, Hash, required: true, callbacks: {
   end,
   'schedule cannot combine time: with any other value' => lambda do |val|
     (val.length == 1) || (!val.key? :time)
-  end,
-  'schedule components must be integers' => lambda do |val|
-    val.key?(:time) || val.reject { |_k, v| v.is_a? Integer }.empty?
   end
 }
 property :user, String, default: 'root'

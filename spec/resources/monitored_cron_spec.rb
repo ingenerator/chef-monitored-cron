@@ -27,14 +27,6 @@ describe_resource 'resources::monitored_cron' do
       )
     end
 
-    it 'raises a validation exception if schedule cron fields are not integer' do
-      chef_runner.node.normal['test']['schedule'] = { day: 'stuff' }
-      expect { chef_run }.to raise_error(
-        Chef::Exceptions::ValidationFailed,
-        /schedule components must be integers/
-      )
-    end
-
     context 'when monitored_cron is not installed' do
       let (:converge_what) { ["test_helpers::test_#{resource}"] }
 
