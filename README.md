@@ -7,14 +7,12 @@ jobs rather than the traditional model of sending all their output to email.
 
 Use `monitored-cron` when you want to:
 
-* ~~Log all the output of a cron job.~~
-* ~~Report an error if a cron writes to STDERR.~~
-* ~~Report an error based on analysing the cron output.~~
-* ~~Notify a webhook URL when a cron runs (use with services like statuscake or
-  pushmon to verify that your crons are running).~~
-* ~~Capture a cron's output or status to syslog.~~
-* ~~Prevent more than one instance of a particular cron running simultaneously (eg
-  if a task runs longer than it's usual duration).~~
+* Log all the output of a cron job to syslog.
+* Report an error if a cron writes to STDERR.
+* Notify a webhook URL when a cron runs successfully (use with services like
+  statuscake or  to verify that your crons are running).
+* Prevent more than one instance of a particular cron running simultaneously (eg
+  if a task runs longer than it's usual duration).
 
 
 Requirements
@@ -28,8 +26,55 @@ Custom resources
 
 ## monitored_cron
 
-tbc
+```
+# Minimum configuration showing defaults
+monitored_cron 'backup' do
+  command '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule       :time => :daily
+  # user         'root'
+  # require_lock false
+end
 
+# Or schedule with a cron expression
+monitored_cron 'backup' do
+  command '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule :hour => 12, :minute => 5
+end
+
+# Prevent overlapping execution of later crons if it slows down
+# (this will cause a failure if a previous instance is still running when the
+#  next cron interval is triggered)
+monitored_cron 'backup' do
+  command      '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule     :minute => '*'
+  require_lock true
+end
+
+# Allow the cron to retry getting a lock 2 times over 30 seconds
+monitored_cron 'backup' do
+  command      '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule     :minute => '*'
+  require_lock true
+  lock_retries 2
+  lock_sleep   15
+end
+
+# Ping an HTTP/s URL on successful completion
+# The URL will not be called if the task outputs to stderr or exits nonzero
+monitored_cron 'backup' do
+  command      '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule     :minute => '*'
+  notify_url   'http://my.monitoring/service'
+end
+
+# Report how long the task took to run in seconds
+monitored_cron  'backup' do
+  command       '/path/to/backup --src=/my/files --dest="s3://backup"'
+  schedule      :minute => '*'
+  notify_url    'http://my.monitoring/service?time=:runtime:'
+  # will become http://my.monitoring/service?time=0.231
+end
+```
 
 Testing
 -------
