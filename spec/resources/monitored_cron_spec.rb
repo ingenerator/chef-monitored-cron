@@ -27,6 +27,14 @@ describe_resource 'resources::monitored_cron' do
       )
     end
 
+    it 'raises a validation exception if name is not alphanumeric' do
+      chef_runner.node.normal['test']['name'] = 'well this is junk'
+      expect { chef_run }.to raise_error(
+        Chef::Exceptions::ValidationFailed,
+        /does not match regular expression/
+      )
+    end
+
     context 'when monitored_cron is not installed' do
       let (:converge_what) { ["test_helpers::test_#{resource}"] }
 

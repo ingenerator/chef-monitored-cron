@@ -1,3 +1,8 @@
+# Installs the monitored-cron wrapper script and provisions required directories
+#
+# Author::  Andrew Coulton (<andrew@ingenerator.com>)
+# Copyright 2017, inGenerator Ltd
+
 directory node['monitored_cron']['src_dir'] do
   action    :create
   owner     'root'

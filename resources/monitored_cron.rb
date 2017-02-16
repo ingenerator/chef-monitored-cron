@@ -1,17 +1,18 @@
-# notification_trigger is a no-op resource that just provides a place to manually
-# queue delayed notifications, for example for a service that should always be
-# reloaded after a provisioning run.
+# monitored_cron schedules a command to be run as a cron, with output and errors
+# sent to syslog and - optionally - an HTTP ping notification to a monitoring
+# endpoint.
 #
-# Use it like:
-#
-#   notification_trigger 'Flush opcode cache' do
-#     notifies :reload, 'service[apache2]', :delayed
-#   end
+# See the README for full usage information
 #
 resource_name :monitored_cron
 
-property :name, String, name_property: true
+# User-friendly task name, must be filesystem-safe
+property :name, String, name_property: true, regex: /^[a-zA-Z0-9\-\_]+$/
+
+# Actual command to run
 property :command, String, required: true
+
+# Either {time: :daily} or a cron expression as {minute => 2, hour:12} etc
 property :schedule, Hash, required: true, callbacks: {
   'schedule must not be empty' => lambda do |val|
     val.length >= 1
@@ -20,11 +21,22 @@ property :schedule, Hash, required: true, callbacks: {
     (val.length == 1) || (!val.key? :time)
   end
 }
+
+# User to run as
 property :user, String, default: 'root'
+
+# Whether to lock so only one instance can run at a time
 property :require_lock, [TrueClass, FalseClass], default: false
+
+# If locking, how many times to retry getting a lock
 property :lock_retries, Integer
+
+# If locking, how long to wait between retries
 property :lock_sleep, Integer
-property :require_lock, [TrueClass, FalseClass], default: false
+
+# Optionally ping this URL when the task succeeds. You can include :runtime: in
+# any part of the URL and it will be replaced with the number of seconds the task
+# ran.
 property :notify_url, String, regex: URI.regexp(%w(http https))
 
 default_action :create
@@ -56,10 +68,12 @@ action :create do
 end
 
 action_class do
+  # Path to the JSON job file for this job
   def job_file_path
     ::File.join(node['monitored_cron']['job_dir'], name + '.json')
   end
 
+  # Builds the config JSON
   def job_config
     config = { command: new_resource.command }
     config['notify'] = notify_config if new_resource.notify_url
@@ -67,10 +81,12 @@ action_class do
     config
   end
 
+  # Builds the notify section of config json
   def notify_config
     { url: new_resource.notify_url }
   end
 
+  # Builds the locking section of config json
   def locking_config
     cfg = {
       lockrun: ::File.join(node['monitored_cron']['bin_dir'], 'lockrun'),
@@ -85,6 +101,7 @@ action_class do
     raise "Missing recipe #{recipe}: #{message}" unless node.recipe?(recipe)
   end
 
+  # Format the actal shell command that cron will be asked to run
   def cron_command
     [
       '/usr/bin/ruby',
