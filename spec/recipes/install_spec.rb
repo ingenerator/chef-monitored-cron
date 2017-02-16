@@ -28,6 +28,15 @@ describe 'monitored-cron::install' do
     )
   end
 
+  it 'creates a standard cron to recreate the locks directory on reboot' do
+    expect(chef_run).to create_cron('ensure-cron-lock-dir').with(
+      command: '[ -d /locks ] || mkdir -p -m0733 /locks',
+
+      user:    'root',
+      time:    :reboot
+    )
+  end
+
   it 'creates a private jobs directory' do
     expect(chef_run).to create_directory('/jobs').with(
       owner: 'root',
