@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/). Note that
 
 ## Unreleased
 
+* Add a :delete action to remove old crons
+
 ## 0.1.0
 
 * First version

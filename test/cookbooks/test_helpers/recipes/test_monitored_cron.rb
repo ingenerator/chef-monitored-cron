@@ -11,6 +11,7 @@ else
 end
 
 monitored_cron node['test']['name'] do
+  action       node['test']['action'].to_sym if node['test']['action']
   command      node['test']['command']
   schedule     schedule
   user         node['test']['user'] if node['test']['user']
