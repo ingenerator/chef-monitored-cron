@@ -188,4 +188,29 @@ describe_resource 'resources::monitored_cron' do
       end
     end
   end
+
+  describe 'delete' do
+    let (:node_attributes) do
+      {
+        monitored_cron: {
+          job_dir: '/etc/jobs'
+        },
+        test: {
+          action: 'delete',
+          name:   'my-task',
+          command: '/path/to/exe --with=arg',
+          schedule: { time: :annually }
+        }
+      }
+    end
+
+    it 'deletes the job JSON file' do
+      expect(chef_run).to delete_file('/etc/jobs/my-task.json')
+    end
+
+    it 'deletes the crontab entry for the job' do
+      expect(chef_run).to delete_cron('monitored-my-task')
+    end
+
+  end
 end

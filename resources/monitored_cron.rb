@@ -69,6 +69,16 @@ action :create do
   end
 end
 
+action :delete do
+  file job_file_path do
+    action :delete
+  end
+
+  cron cron_name do
+    action :delete
+  end
+end
+
 action_class do
 
   def cron_name
