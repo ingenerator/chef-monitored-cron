@@ -172,12 +172,12 @@ class MonitoredCronRunner
     output = read_pipe_lines(stdout, stderr, timeout)
 
     output[:stdout].each do |line|
-      log(Syslog::LOG_DEBUG, line)
+      log(Syslog::LOG_DEBUG, line.gsub(/%/, '%%'))
     end
 
     output[:stderr].each do |line|
       @had_stderr = true
-      log(Syslog::LOG_WARNING, line)
+      log(Syslog::LOG_WARNING, line.gsub(/%/, '%%'))
     end
   end
 
