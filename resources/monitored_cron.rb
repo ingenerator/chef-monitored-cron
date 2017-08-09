@@ -42,8 +42,8 @@ property :notify_url, String, regex: URI.regexp(%w(http https))
 default_action :create
 
 action :create do
-  require_recipe('monitored-cron::install', 'Required to use monitored_cron')
-  require_recipe('monitored-cron::install_lockrun', 'Required for locking') if require_lock
+  require_included_recipe('monitored-cron::install', 'Required to use monitored_cron')
+  require_included_recipe('monitored-cron::install_lockrun', 'Required for locking') if require_lock
 
   file job_file_path do
     content ::JSON.pretty_generate(job_config)
@@ -120,7 +120,7 @@ action_class do
     cfg
   end
 
-  def require_recipe(recipe, message)
+  def require_included_recipe(recipe, message)
     raise "Missing recipe #{recipe}: #{message}" unless node.recipe?(recipe)
   end
 
