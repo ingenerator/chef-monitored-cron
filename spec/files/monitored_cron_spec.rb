@@ -55,7 +55,7 @@ describe 'MonitoredCronRunner' do
 
         it 'logs an alert message to syslog' do
           subject
-          expect_logged('[alert] Invalid job config `' + config_file + '`: [JSON::ParserError] 743: unexpected token at \'this is junk\'')
+          expect_logged('[alert] Invalid job config `' + config_file + '`: [JSON::ParserError] 765: unexpected token at \'this is junk\'')
         end
 
         include_examples 'does not output anything'

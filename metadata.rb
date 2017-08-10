@@ -1,10 +1,11 @@
 name 'monitored-cron'
 maintainer 'Andrew Coulton'
 maintainer_email 'andrew@ingenerator.com'
-license 'Apache 2.0'
+license 'Apache-2.0'
+chef_version '>=12.18.31'
 description 'Wraps cron jobs to provide logging, remote monitoring and alerting'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version '0.1.2'
+version '0.2.0'
 issues_url 'https://github.com/ingenerator/chef-monitored-cron/issues'
 source_url 'https://github.com/ingenerator/chef-monitored-cron'
 
