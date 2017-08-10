@@ -20,6 +20,15 @@ Requirements
 - Chef 12.18 or higher
 - **Ruby 2.3 or higher**
 
+Installation
+------------
+We recommend adding to your `Berksfile` and using [Berkshelf](http://berkshelf.com/):
+
+```ruby
+source 'https://chef-supermarket.ingenerator.com'
+cookbook 'monitored-cron', '~>0.2'
+```
+
 
 Custom resources
 ----------------
