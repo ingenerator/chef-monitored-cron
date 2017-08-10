@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). Note that
 
 ## Unreleased
 
+* Fix internal namespace collision warnings for access to resource properties
 * Ignore build-time files from the vendored cookbook
 * Update build dependencies and build against Chef 12 and Chef 13
 
