@@ -1,6 +1,6 @@
 monitored-cron cookbook
 =======================
-[![Build Status](https://travis-ci.org/ingenerator/chef-monitored-cron.png?branch=1.x)](https://travis-ci.org/ingenerator/chef-monitored-cron)
+[![Build Status](https://travis-ci.org/ingenerator/chef-monitored-cron.png?branch=0.x)](https://travis-ci.org/ingenerator/chef-monitored-cron)
 
 The `monitored-cron` cookbook supports logging, monitoring and alerting of cron
 jobs rather than the traditional model of sending all their output to email.
